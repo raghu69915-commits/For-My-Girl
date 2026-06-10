@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>For You, My Love</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffe3e3 0%, #fbc2eb 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 16px;
+            overflow-y: auto;
+        }
+
+        .phone-card {
+            background: rgba(255, 255, 255, 0.96);
+            padding: 24px 20px;
+            border-radius: 28px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.5s cubic-bezier(0.1, 0.8, 0.25, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #d63031;
+            margin-bottom: 12px;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        p {
+            color: #4f4f4f;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 18px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-yes {
+            background-color: #ff7675;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 118, 117, 0.25);
+        }
+
+        .btn-yes:hover {
+            background-color: #f65e5e; 
+            box-shadow: 0 6px 18px rgba(255, 94, 94, 0.35);
+        }
+
+        .btn-no {
+            background-color: #b2bec3;
+            color: white;
+        }
+
+        .btn-no:hover {
+            background-color: #a0acb2; 
+        }
+
+        .stack-container {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            margin-bottom: 22px;
+            perspective: 1000px;
+        }
+
+        .photo-card-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease;
+            transform-origin: bottom center;
+        }
+
+        .photo-card-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+
+        .stack-container:hover .photo-card-item.top-card img {
+            transform: scale(1.04);
+        }
+
+        /* Dynamic depth positioning for the top 3 visible cards */
+        .photo-card-item.card-0 { z-index: 3; transform: translateZ(0px) translateY(0px) scale(1); opacity: 1; }
+        .photo-card-item.card-1 { z-index: 2; transform: translateZ(-15px) translateY(-8px) scale(0.95); opacity: 0.9; }
+        .photo-card-item.card-2 { z-index: 1; transform: translateZ(-30px) translateY(-16px) scale(0.90); opacity: 0.8; }
+        
+        /* Keep the rest of the cards hidden deep in the background until their turn */
+        .photo-card-item.card-hidden { z-index: 0; transform: translateZ(-45px) translateY(-24px) scale(0.85); opacity: 0; }
+
+        .photo-card-item.dismissed {
+            transform: translateX(120%) rotate(20deg) !important;
+            opacity: 0 !important;
+        }
+
+        .photo-box {
+            width: 100%;
+            height: 240px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            background-color: #f0f0f0;
+        }
+
+        .photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-box:hover img {
+            transform: scale(1.05);
+        }
+
+        .audio-player {
+            margin-top: 5px;
+            width: 100%;
+            height: 40px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 24px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+        }
+
+        @keyframes popUp {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .tap-hint {
+            font-size: 0.8rem;
+            color: #ff7675;
+            margin-bottom: 12px;
+            font-weight: 600;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-card">
+        
+        <div id="page1" class="page active">
+            <h1>Hnji Sohneyoo... 🥺</h1>
+            
+            <div class="stack-container" id="cardStack" onclick="rotateCard()">
+                <div class="C:\Users\ds699\OneDrive\Desktop\New folder\slide1.jpg" alt="Memory 1"></div>
+                <div class="photo-card-item card-1"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide2.jpg" alt="Memory 2"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide3.jpg" alt="Memory 3"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide4.jpg" alt="Memory 4"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide5.jpg""C:\ alt="Memory 5"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide6.jpg" alt="Memory 6"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide7.jpg" alt="Memory 7"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide8.jpg" alt="Memory 8"></div>
+                <div class="photo-card-item card-2"><img src="C:\Users\ds699\OneDrive\Desktop\New folder\slide9.jpg" alt="Memory 9"></div>
+
+            </div>
+
+           <div class="tap-hint">👆Click On pictures pls Mam........
+ Ehe Khus Mere Dil nu Shu Jaan Valiyan Tasvira ne</div>
+
+            <p>Pta Tusi mere Ghar toh yada dur nhi rehnde oo but ehe ehni jayi duri vi bhut bekar lagdi aa , bas ikk tuhadi permission na hon kar ke aram nal betha nhi te kdo da ehe duri khatam kar dinda menu pta tusi naraj oo mere toh fir vi meri gal suno gei?!!</p>
+            <div class="btn-container">
+                <button class="btn-yes" onclick="nextPage(2)">Sun hi lendi aa</button>
+                <button class="btn-No" onclick="showPopup()">Nhi!! mai hje vi gussa a</button>
+            </div>
+
+        </div>
+
+        <div id="page2" class="page">
+            <h1>I Am Truly Sorry</h1>
+            <div class="photo-box">
+                <img src="C:\Users\ds699\OneDrive\Desktop\New folder\photo2.jpg" alt="Our Picture" alt="Our Picture">
+            </div>
+            <p>I am Deeply Sorry Jo vi mai boleya tuhanu jis kar ke tuhanu bhut bura lga. Meh manda aa ki mai apni frustration tuhade te kadi te menu iss gal da bhut regret aa , menu vi iss gal bare soch ke bhut bura lagda te sharam andi ki mai ave kio keha. But sachi Tusi mere lyi mere sab kus oo , te mera kol tuhade bina hai hi kon(as per our age) te mai tuhade toh dur nhi hona chaunda, mai promise karda ehe pakka meri akhri galti hove gi next time toh mai kde vi avenhi kru gai pinki promise , mai apne gusse nu bilkul khatam kar lena pakka phala vangu , actually mai na tuhade te hak jtaan lag geya si te ehe menu baad vich realise hoya ki mai galat kar reha, tuhadi apni life aa tuhanu hor vi friends te cousins ne jehna nal time spend karna jarori aa , te tuhadi life vich hor vi bhut kam ne , mai ehe sab bhul jeha geya si, menu pta fer vi tusi always mere lyi time kad ke gal karn ande oo te sachi i really thank you ki tusi mere lyi time kad ke gal karde oo mere nal mere pure din di bakvas sunde oo mai je kus kde galat likh vi dinda tusi ignore kar ke menu maaf kar dinde oo, Pls Menu iss baar vi maaf kar do 🥺 , te pls apna gussa "aaaa thuu" kar ke pls dubara mere nal peyar nal gal kar leya kro pls</p>
+            <button class="btn-yes" onclick="nextPage(3)">Ikk aakhri gal hor...</button>
+        </div>
+
+        <div id="page3" class="page">
+            <h1>Chalo sab dubara thik karde aa pls❤️</h1>
+            <div class="photo-box">
+                <img src="C:\Users\ds699\OneDrive\Desktop\New folder\photo3.jpg" alt="Our Picture">
+            </div>
+            <p>Meh promise karda to handle my mood and talk to you with the love you deserve. I'm not letting go of us🥺. Meh jina peyar phala karda si ajj te uss toh vi yada karda aa te aghe vi ehe tuhade lyi vad da hi rhe gai. Ir really Love You So So much❤️🥺 I'll be waiting For u text.</p>
+            <p style="font-size: 0.8rem; color: #777; margin-bottom: 6px;">🎵 Play this for us:</p>
+            <audio controls class="audio-player">
+                <source src="C:\Users\ds699\OneDrive\Desktop\New folder\song.mp3" type="audio/mpeg">
+            </audio>
+        </div>
+        </div>
+
+    </div>
+
+    <div id="noModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #d63031; font-size: 1.35rem; margin-bottom: 8px;">Please... 🥺</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 18px;">I know tusi hje vi gusse oo but pls Sun te lo meri pls... Ikk bar bas...</p>
+            <button class="btn-yes" onclick="closePopup()">ooho acha</button>
+        </div>
+    </div>
+
+    <script>
+        function nextPage(pageNumber) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('page' + pageNumber).classList.add('active');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+        function showPopup() { document.getElementById('noModal').style.display = 'flex'; }
+        function closePopup() { document.getElementById('noModal').style.display = 'none'; }
+
+        // Master loop logic for 9 cards
+        let cards = Array.from(document.querySelectorAll('.photo-card-item'));
+        function rotateCard() {
+            if (cards.length <= 1) return;
+            let topCard = cards[0];
+            topCard.classList.add('dismissed');
+            topCard.classList.remove('top-card');
+            cards.shift();
+            setTimeout(() => {
+                topCard.classList.remove('dismissed');
+                document.getElementById('cardStack').appendChild(topCard);
+                cards.push(topCard);
+                cards.forEach((card, index) => {
+                    card.className = 'photo-card-item';
+                    if (index === 0) {
+                        card.classList.add('card-0', 'top-card');
+                    } else if (index === 1) {
+                        card.classList.add('card-1');
+                    } else if (index === 2) {
+                        card.classList.add('card-2');
+                    } else {
+                        card.classList.add('card-hidden');
+                    }
+                });
+            }, 400);
+        }
+    </script>
+</body>
+</html>
